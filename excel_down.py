@@ -1,8 +1,8 @@
 import requests
 import pandas as pd
 from io import BytesIO
-import time
 import mysql.connector
+import time
 from mysql.connector import Error
 
 def get_stock_by_investor_80019(pdate, stock_cdnm ='A005930', stock_code = 'KR7005930003', stock_name = '삼성전자'):
