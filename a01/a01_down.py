@@ -1,11 +1,25 @@
+#%%
 import requests
 import pandas as pd
 from io import BytesIO
 import mysql.connector
 import time
 from mysql.connector import Error
+import os
+import json
 
-def get_30017_down(pdate):
+with open('config.json') as config_file:
+    config = json.load(config_file)
+
+######
+
+DB = 'Analysis'
+TB_30017 = 'a01_30017'
+# TB_81004 = 'a01_81004'
+
+######
+
+def get_down_30017(pdate):
     gen_req_url = 'http://marketdata.krx.co.kr/contents/COM/GenerateOTP.jspx'
     query_str_params = {
         'name': 'fileDown',
@@ -80,13 +94,42 @@ def get_30017_down(pdate):
     else: 
         print('POST failed for date', pdate)
         return None
-    
-def save_to_db(df):
+
+
+def check_table(db, tb):
     try:
-        connection = mysql.connector.connect(host='issuetrackerdb.cv2cs77f45ul.ap-northeast-2.rds.amazonaws.com',
-                                            database='Practice',
-                                            user='admin',
-                                            password='passadmin')
+        connection = mysql.connector.connect(host=config.get('AWS_RDS_Host'),
+                                            database=str(db),
+                                            user=config.get('user'),
+                                            password=config.get('password'))
+        if connection.is_connected():
+            cursor = connection.cursor()
+            cursor.execute(f"USE {db}")
+            cursor.execute(f"SHOW TABLES")
+            tables = cursor.fetchall()
+            if (f'{tb}', ) in tables: 
+                cursor.close()
+                return [connection, 1] # return 1 if table exists
+            else: 
+                cursor.close()
+                return [connection, 0]
+
+    except Error as e:
+        print("Error while connecting to MySQL: ", e)
+
+def create_table_30017(db, tb):
+    check = check_table(db, tb)
+    if check[1] == 0: 
+        pass # CREATE TABLE 
+    
+    return check[0]
+
+def save_to_db_30017(df, db, tb):
+    try:
+        connection = mysql.connector.connect(host=config.get('AWS_RDS_Host'),
+                                            database=str(db),
+                                            user=config.get('user'),
+                                            password=config.get('password'))
         if connection.is_connected():
             cursor = connection.cursor()
             for i in range(len(df)):
@@ -124,13 +167,22 @@ def save_to_db(df):
         print("Error while connecting to MySQL: ", e)
 
 
+#%%
+
+
+check_table('Practice', 'table1')
+
+
+
+#%%
+
 datelist = pd.date_range(start='20191001', end='20191015')
 dates = datelist.strftime("%Y%m%d").tolist()
 
 for date in dates:
     df = get_stock_by_investor_80019(date)
     if not df.empty:
-        save_to_db(df)
+        save_to_db(df, )
         print('Done for ', date)
     else: 
         print('No data for ', date)
