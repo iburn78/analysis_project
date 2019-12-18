@@ -117,73 +117,75 @@ def check_table(db, tb):
     except Error as e:
         print("Error while connecting to MySQL: ", e)
 
-def create_table_30017(db, tb):
+def connect_or_create_table_30017(db, tb):
     check = check_table(db, tb)
-    if check[1] == 0: 
-        pass # CREATE TABLE 
+    if check[1] == 0: # if table does not exist...  
+        cursor = check[0].cursor()
+        CREATE_QUERY = f'''
+            Create table {tb} (
+                stockcode varchar(100), 
+                stockname varchar(100),
+                qbuy float, 
+                qsell float, 
+                qbuy_net float, 
+                pbuy float, 
+                psell float, 
+                pbuy_net float, 
+                business_area varchar(100),
+                date date)
+        '''
+        cursor.execute(CREATE_QUERY)
+        check[0].commit() 
+        cursor.close()
     
     return check[0]
 
-def save_to_db_30017(df, db, tb):
-    try:
-        connection = mysql.connector.connect(host=config.get('AWS_RDS_Host'),
-                                            database=str(db),
-                                            user=config.get('user'),
-                                            password=config.get('password'))
-        if connection.is_connected():
-            cursor = connection.cursor()
-            for i in range(len(df)):
-                a1 = str(df['inv_name'][i])
-                a2 = float(df['qbuy'][i])
-                a3 = float(df['qbuy_percent'][i])
-                a4 = float(df['qsell'][i])
-                a5 = float(df['qsell_percent'][i]) 
-                a6 = float(df['qnet_buy'][i])
-                a7 = float(df['pbuy'][i])
-                a8 = float(df['pbuy_percent'][i])
-                a9 = float(df['psell'][i])
-                a10 = float(df['psell_percent'][i])
-                a11 = float(df['pnet_buy'][i])
-                a12 = str(df['date'][i])
-                insert_query=f'''
-                INSERT INTO table1
-                            (inv_name, qbuy, qbuy_percent, qsell, qsell_percent, qnet_buy, pbuy, pbuy_percent, psell, psell_percent, pnet_buy, date)
-                VALUES		('{a1}', {a2}, {a3}, {a4}, {a5}, {a6}, {a7}, {a8}, {a9}, {a10}, {a11}, {a12});
-                '''
-                # print(insert_query)
-                cursor.execute(insert_query)
-                
-            # cursor.execute("SELECT * from table1;")
-            # rows = cursor.fetchall()
-            # for row in rows: 
-            #     for col in row:
-            #         print(col)
-            connection.commit()
-            cursor.close()
-            connection.close()
-            return
-
-    except Error as e:
-        print("Error while connecting to MySQL: ", e)
-
-
-#%%
-
-
-check_table('Practice', 'table1')
-
-
-
-#%%
-
-datelist = pd.date_range(start='20191001', end='20191015')
-dates = datelist.strftime("%Y%m%d").tolist()
-
-for date in dates:
-    df = get_stock_by_investor_80019(date)
-    if not df.empty:
-        save_to_db(df, )
-        print('Done for ', date)
+def save_to_db_30017(connection, df, db, tb):
+    if connection.is_connected():
+        cursor = connection.cursor()
+        for i in range(len(df)):
+            a1 = str(df['stockcode'][i])
+            a2 = str(df['stockname'][i])
+            a3 = float(df['qbuy'][i])
+            a4 = float(df['qsell'][i])
+            a5 = float(df['qbuy_net'][i]) 
+            a6 = float(df['pbuy'][i])
+            a7 = float(df['psell'][i])
+            a8 = float(df['pbuy_net'][i])
+            a9 = str(df['business_area'][i])
+            a10 = str(df['date'][i])
+            insert_query=f'''
+            INSERT INTO {tb}
+                        (stockcode stockname qbuy qsell qbuy_net pbuy psell pbuy_net business_area date)
+            VALUES		('{a1}', '{a2}', {a3}, {a4}, {a5}, {a6}, {a7}, {a8}, '{a9}','{a10}');
+            '''
+            cursor.execute(insert_query)
+            
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return
     else: 
-        print('No data for ', date)
+        print('Connection is not connected')
+        connection.close()
+        return 
+
+#%%
+
+conn = connect_or_create_table_30017(DB, TB_30017)
+df = get_down_30017("20191217")
+save_to_db_30017(conn, df, DB, TB_30017)
+
+#%%
+
+# datelist = pd.date_range(start='20191001', end='20191015')
+# dates = datelist.strftime("%Y%m%d").tolist()
+
+# for date in dates:
+#     df = get_stock_by_investor_80019(date)
+#     if not df.empty:
+#         save_to_db(df, )
+#         print('Done for ', date)
+#     else: 
+#         print('No data for ', date)
 
