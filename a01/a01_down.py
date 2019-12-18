@@ -117,10 +117,15 @@ def check_table(db, tb):
     except Error as e:
         print("Error while connecting to MySQL: ", e)
 
-def connect_or_create_table_30017(db, tb):
+# to initialize table, pass 'init' 
+def connect_or_create_table_30017(db, tb, initialize='no'): 
     check = check_table(db, tb)
-    if check[1] == 0: # if table does not exist...  
-        cursor = check[0].cursor()
+    cursor = check[0].cursor()
+    if initialize == 'init':
+        cursor.execute(f'drop table {tb}')
+        check[0].commit()
+
+    if check[1] == 0 or initialize == 'init': # if table does not exist, or when to initialize... 
         CREATE_QUERY = f'''
             Create table {tb} (
                 stockcode varchar(100), 
@@ -131,13 +136,12 @@ def connect_or_create_table_30017(db, tb):
                 pbuy float, 
                 psell float, 
                 pbuy_net float, 
-                business_area varchar(100),
                 date date)
         '''
         cursor.execute(CREATE_QUERY)
         check[0].commit() 
-        cursor.close()
-    
+
+    cursor.close()
     return check[0]
 
 def save_to_db_30017(connection, df, db, tb):
@@ -152,40 +156,40 @@ def save_to_db_30017(connection, df, db, tb):
             a6 = float(df['pbuy'][i])
             a7 = float(df['psell'][i])
             a8 = float(df['pbuy_net'][i])
-            a9 = str(df['business_area'][i])
+            # a9 = str(df['business_area'][i]) # skipping saving a9 intentionally
             a10 = str(df['date'][i])
             insert_query=f'''
             INSERT INTO {tb}
-                        (stockcode stockname qbuy qsell qbuy_net pbuy psell pbuy_net business_area date)
-            VALUES		('{a1}', '{a2}', {a3}, {a4}, {a5}, {a6}, {a7}, {a8}, '{a9}','{a10}');
+                        (stockcode, stockname, qbuy, qsell, qbuy_net, pbuy, psell, pbuy_net, date)
+            VALUES		('{a1}', '{a2}', {a3}, {a4}, {a5}, {a6}, {a7}, {a8}, '{a10}');
             '''
             cursor.execute(insert_query)
             
         connection.commit()
         cursor.close()
-        connection.close()
+        # connection.close()
         return
     else: 
         print('Connection is not connected')
-        connection.close()
+        # connection.close()
         return 
 
 #%%
+conn = connect_or_create_table_30017(DB, TB_30017, 'init')
 
-conn = connect_or_create_table_30017(DB, TB_30017)
-df = get_down_30017("20191217")
-save_to_db_30017(conn, df, DB, TB_30017)
+datelist = pd.date_range(start='20191216', end='20191218')
+dates = datelist.strftime("%Y%m%d").tolist()
 
-#%%
+for date in dates: 
+    df = get_down_30017(date)
+    if not df.empty:
+        save_to_db_30017(conn, df, DB, TB_30017)
+        print('Done for ', date)
+    else: 
+        print('No data for ', date)
 
-# datelist = pd.date_range(start='20191001', end='20191015')
-# dates = datelist.strftime("%Y%m%d").tolist()
+conn.close()
+print('end of execution')
 
-# for date in dates:
-#     df = get_stock_by_investor_80019(date)
-#     if not df.empty:
-#         save_to_db(df, )
-#         print('Done for ', date)
-#     else: 
-#         print('No data for ', date)
 
+# %%
