@@ -74,22 +74,11 @@ def get_down_30017(pdate):
 
     if len(r_post.content) > 0: 
         # print('POST successful for date', pdate)
+        fields = pd.read_json('fields.json', orient='split')
+        rename_dict = fields.set_index('from')['to'].to_dict()
         df = pd.read_excel(BytesIO(r_post.content), thousands=',')
-        df = df.rename(
-            {
-               '종목코드': 'stockcode',
-               '종목명': 'stockname',
-               '매수거래량': 'qbuy',
-               '매도거래량': 'qsell',
-               '순매수거래량': 'qbuy_net',
-               '매수거래대금': 'pbuy',
-               '매도거래대금': 'psell',
-               '순매수거래대금': 'pbuy_net',
-               '업종명': 'business_area',
-            }, axis='columns'
-        )
         df['date'] = str(pdate)
-        # print(df)
+        df = df.rename(columns = rename_dict) 
         return df
     else: 
         print('POST failed for date', pdate)
@@ -118,31 +107,34 @@ def check_table(db, tb):
         print("Error while connecting to MySQL: ", e)
 
 # to initialize table, pass 'init' 
-def connect_or_create_table_30017(db, tb, initialize='no'): 
+def connect_or_create_table_30017(df, db, tb, initialize='no'): 
     check = check_table(db, tb)
     cursor = check[0].cursor()
-    if initialize == 'init':
+    if check[1] == 1 and initialize == 'init':
         cursor.execute(f'drop table {tb}')
         check[0].commit()
 
+    fields = pd.read_json('fields.json', orient='split')
+    res = fields.set_index('to').lookup(df.columns, ['type']*len(df.columns))
+    query_dict = dict(zip(df.columns, res))
+    
+    QUERY = f'CREATE TABLE {tb} ('
+    for i in df.columns:
+        QUERY += f'{i} {query_dict[i]}, '
+    QUERY = QUERY[:-2] + ')'
+
     if check[1] == 0 or initialize == 'init': # if table does not exist, or when to initialize... 
-        CREATE_QUERY = f'''
-            Create table {tb} (
-                stockcode varchar(100), 
-                stockname varchar(100),
-                qbuy float, 
-                qsell float, 
-                qbuy_net float, 
-                pbuy float, 
-                psell float, 
-                pbuy_net float, 
-                date date)
-        '''
-        cursor.execute(CREATE_QUERY)
+        cursor.execute(QUERY)
         check[0].commit() 
 
     cursor.close()
     return check[0]
+
+#####
+#####
+# NEED TO MODIFY 
+#####
+#####
 
 def save_to_db_30017(connection, df, db, tb):
     if connection.is_connected():
@@ -175,13 +167,16 @@ def save_to_db_30017(connection, df, db, tb):
         return 
 
 #%%
-conn = connect_or_create_table_30017(DB, TB_30017, 'init')
-
-datelist = pd.date_range(start='20191216', end='20191218')
+start_date = '20191216'
+end_date = '20191218'
+datelist = pd.date_range(start=start_date, end=end_date)
 dates = datelist.strftime("%Y%m%d").tolist()
 
+df = get_down_30017(start_date)
+conn = connect_or_create_table_30017(df, DB, TB_30017, 'init')
+
 for date in dates: 
-    df = get_down_30017(date)
+    df = get_down_30017(date)  # downloading twice for start_date
     if not df.empty:
         save_to_db_30017(conn, df, DB, TB_30017)
         print('Done for ', date)
@@ -190,6 +185,7 @@ for date in dates:
 
 conn.close()
 print('end of execution')
+
 
 
 # %%

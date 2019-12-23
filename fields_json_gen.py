@@ -17,24 +17,29 @@ df = pd.DataFrame(
         ['매도거래대금', 'psell', 'float'],
         ['순매수거래대금', 'pbuy_net', 'float'],
         ['업종명', 'business_area', 'varchar(100)'],
-    ], 
+        ['date', 'date', 'date']
+    ],
     columns = ['from', 'to', 'type'])
 df.to_json('fields.json', orient='split')
 
-# %%
+  
+#%%
+# use cases for reference
+# print(fields.loc[fields['from'] == '종목명'].to.values)
 
 fields = pd.read_json('fields.json', orient='split')
-print(fields)
-
-test_db = pd.read_excel('data.xls', thousands=',')
-# print(test_db)
+rename_dict = fields.set_index('from')['to'].to_dict()
 
 #%%
-for i in test_db.columns:
-    
-    print(fields)
-    print(i)
 
-fields.loc[fields['from'] == '종목명'].to.values
+db = pd.read_excel('data.xls', thousands=',')
+db = db.rename(columns = rename_dict)
 
-# %%
+res = fields.set_index('to').lookup(db.columns, ['type']*len(db.columns))
+query_dict = dict(zip(db.columns, res))
+tb = 'table1'
+QUERY = f'CREATE TABLE {tb} ('
+for i in db.columns:
+    QUERY += f'{i} {query_dict[i]}, '
+QUERY = QUERY[:-2] + ')'
+
