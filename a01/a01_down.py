@@ -130,32 +130,39 @@ def connect_or_create_table_30017(df, db, tb, initialize='no'):
     cursor.close()
     return check[0]
 
-#####
-#####
-# NEED TO MODIFY 
-#####
-#####
 
 def save_to_db_30017(connection, df, db, tb):
     if connection.is_connected():
         cursor = connection.cursor()
+
+        # Think about efficiency
+        # outside of all loops
+        col_text = '('
+        for i in range(len(df.columns)):
+            col_text += f'{df.columns[i]}, '
+        col_text = col_text[:-2] + ')'
+
+        t = fields.set_index('to')['type']
+        c = df.columns
+        l = len(c)
+
+        # inside of the loop for records
+
         for i in range(len(df)):
-            a1 = str(df['stockcode'][i])
-            a2 = str(df['stockname'][i])
-            a3 = float(df['qbuy'][i])
-            a4 = float(df['qsell'][i])
-            a5 = float(df['qbuy_net'][i]) 
-            a6 = float(df['pbuy'][i])
-            a7 = float(df['psell'][i])
-            a8 = float(df['pbuy_net'][i])
-            # a9 = str(df['business_area'][i]) # skipping saving a9 intentionally
-            a10 = str(df['date'][i])
-            insert_query=f'''
-            INSERT INTO {tb}
-                        (stockcode, stockname, qbuy, qsell, qbuy_net, pbuy, psell, pbuy_net, date)
-            VALUES		('{a1}', '{a2}', {a3}, {a4}, {a5}, {a6}, {a7}, {a8}, '{a10}');
-            '''
-            cursor.execute(insert_query)
+            r = df.loc[i]
+
+        # insdie of the loop for columns in a record
+            val_text = '('
+            for i in range(l):
+                if t[c[i]]  == 'varchar(100)' or t[c[i]] == 'date':
+                    val_text += f'\'{r[i]}\', '
+                elif t[c[i]] == 'float':
+                    val_text += f'{r[i]}, '
+                else: 
+                    print('type error')
+            val_text = val_text[:-2] + ')'
+            INSERT_QUERY = f'INSERT INTO {tb} ' + col_text + ' VALUES ' + val_text + ';'
+            cursor.execute(INSERT_QUERY)
             
         connection.commit()
         cursor.close()
