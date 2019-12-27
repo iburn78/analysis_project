@@ -1,6 +1,0 @@
-{
-    "AWS_RDS_Host":"issuetrackerdb.cv2cs77f45ul.ap-northeast-2.rds.amazonaws.com",
-    "user":"admin",
-    "password":"passadmin"
-}
-
