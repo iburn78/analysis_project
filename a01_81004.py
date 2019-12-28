@@ -7,7 +7,7 @@ import time
 
 
 DB= 'Analysis'
-TB= 'a01_30017'
+TB= 'a01_81004'
 
 START_DATE = '20190102'
 END_DATE = '20190103'
@@ -18,12 +18,11 @@ def query_str_params(pdate):
     return {
     'name': 'fileDown',
     'filetype': 'xls',
-    'url': 'MKD/04/0404/04040400/mkd04040400',
-    'stctype': 'ALL',
-    'var_invr_cd': '1000',
-    'schdate': str(pdate),
-    'etctype': 'ST',
-    'pagePath': '/contents/MKD/04/0404/04040400/MKD04040400.jsp'
+    'url': 'MKD/13/1302/13020101/mkd13020101', 
+    'market_gubun': 'ALL', 
+    'sect_tp_cd': 'ALL',
+    'schdate': str(pdate), 
+    'pagePath': '/contents/MKD/13/1302/13020101/MKD13020101.jsp',
 }
 
 headers_get= {

@@ -39,7 +39,6 @@ def check_table_and_connect(df, db, tb, initialize = 'no'):
             if (f'{tb}', ) not in tables or initialize == 'init': # if table does not exist, or when to initialize
                 a = fields.set_index('to').lookup(df.columns, ['type']*len(df.columns))
                 query_dict = dict(zip(df.columns, a))
-    
                 QUERY = f'CREATE TABLE {tb} ('
                 for i in df.columns:
                     QUERY += f'{i} {query_dict[i]}, ' # query_dict[i] is SQL data type for {i}
