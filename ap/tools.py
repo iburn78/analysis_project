@@ -1,20 +1,17 @@
 #%%
-import sys, pathlib
+import sys#, pathlib
 # sys.path.insert(0, str(pathlib.Path(__file__).parent)) # need only when to run this file independently in jupyter-notebook
 import mysql.connector
 from mysql.connector import Error
-import json
 from .setup import *   # explicit relative import cannot be used if this file run indepdendently
-
 
 # rename_fileds() renames fileds of df as defined in fields
 # rename_fields() returns the same df 
-def rename_fields(df):
-    rename_dict = fields.set_index('from')['to'].to_dict()
+def rename_fields(df, prefix=''):
+    fields['renamed_to'] = prefix + '_' + fields['to'] 
+    rename_dict = fields.set_index('from')['renamed_to'].to_dict()
     df = df.rename(columns = rename_dict) 
     return df
-
-
 
 # check_table() checks whether the table exists in database and creates a table as specified in df if needed
 # check_table() returns a db connection object 
@@ -37,7 +34,7 @@ def check_table_and_connect(df, db, tb, initialize = 'no'):
                 cursor.execute(f'drop table {tb}')
                 
             if (f'{tb}', ) not in tables or initialize == 'init': # if table does not exist, or when to initialize
-                a = fields.set_index('to').lookup(df.columns, ['type']*len(df.columns))
+                a = fields.set_index('renamed_to').lookup(df.columns, ['type']*len(df.columns))
                 query_dict = dict(zip(df.columns, a))
                 QUERY = f'CREATE TABLE {tb} ('
                 for i in df.columns:
@@ -69,22 +66,16 @@ def save_to_db(connection, df, db, tb):
             col_text += f'{df.columns[i]}, '
         col_text = col_text[:-2] + ')'
 
-        t = fields.set_index('to')['type']
-        c = df.columns
-        l = len(c)
-
+        t = fields.set_index('renamed_to')['type']
         # inside of the loop for records
-
-        for i in range(len(df)):
-            r = df.loc[i]
-
+        for i in df.index:
         # insdie of the loop for columns in a record
             val_text = '('
-            for i in range(l):
-                if t[c[i]]  == 'varchar(100)' or t[c[i]] == 'date':
-                    val_text += f'\'{r[i]}\', '
-                elif t[c[i]] == 'float':
-                    val_text += f'{r[i]}, '
+            for j in df.columns:
+                if t[j]  == 'varchar(100)' or t[j] == 'date':
+                    val_text += f'\'{df.loc[i][j]}\', '
+                elif t[j] == 'float':
+                    val_text += f'{df.loc[i][j]}, '
                 else: 
                     print('type error')
             val_text = val_text[:-2] + ')'
@@ -100,3 +91,6 @@ def save_to_db(connection, df, db, tb):
         connection.close()
         sys.exit('Connection ERROR - save_to_db')
         return 
+
+
+
