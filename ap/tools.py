@@ -13,6 +13,12 @@ def rename_fields(df, prefix=''):
     df = df.rename(columns = rename_dict) 
     return df
 
+def get_connection(db):
+    return mysql.connector.connect(host=config.get('AWS_RDS_Host'),
+                                database=str(db),
+                                user=config.get('user'),
+                                password=config.get('password'))
+
 # check_table() checks whether the table exists in database and creates a table as specified in df if needed
 # check_table() returns a db connection object 
 # df: pandas data frame
@@ -21,10 +27,7 @@ def rename_fields(df, prefix=''):
 # initialize: 'init' to iniitialzie, otherwise not to initialize 
 def check_table_and_connect(df, db, tb, initialize = 'no'):
     try:
-        connection = mysql.connector.connect(host=config.get('AWS_RDS_Host'),
-                                            database=str(db),
-                                            user=config.get('user'),
-                                            password=config.get('password'))
+        connection = get_connection(db)
         if connection.is_connected():
             cursor = connection.cursor()
             cursor.execute(f"USE {db}")
@@ -48,8 +51,7 @@ def check_table_and_connect(df, db, tb, initialize = 'no'):
 
     except Error as e:
         print("Error while connecting to MySQL: ", e)
-
-
+        return None
 
 # save_to_db() saves df to tb in db via connection
 # df: pandas data frame
@@ -92,5 +94,20 @@ def save_to_db(connection, df, db, tb):
         sys.exit('Connection ERROR - save_to_db')
         return 
 
+# Simple function to read from SQL Table to DataFrame
+def sql_to_df(db, tb):
+    try:
+        connection = get_connection(db)
+        if connection.is_connected():
+            query = f"select * from {tb};"
+            df = pd.read_sql(query, connection)
+            return df
+        else: 
+            print("Connection is not establisehd")
+            return None
+
+    except Error as e:
+        print("Error while connecting to MySQL: ", e)
+        return None
 
 

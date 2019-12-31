@@ -1,5 +1,6 @@
 #%%
 from ap.classes import Download_per_date
+from ap.tools import *
 
 DB = 'Analysis'
 INIT = 'init'  
@@ -34,7 +35,7 @@ QUERY_STR_PARAMS2 = {
 }
 
 a01_30017 = Download_per_date(DB, INIT, TB1, PREFIX1, QUERY_STR_PARAMS1)
-a02_81004 = Download_per_date(DB, INIT, TB2, PREFIX2, QUERY_STR_PARAMS2)
+a01_81004 = Download_per_date(DB, INIT, TB2, PREFIX2, QUERY_STR_PARAMS2)
 
 a01_30017.download(START_DATE, END_DATE)
-a02_81004.download(START_DATE, END_DATE)
+a01_81004.download(START_DATE, END_DATE)
