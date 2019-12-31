@@ -81,7 +81,7 @@ class Download_per_date:
     def download(self, start_date, end_date): 
         print('Downloading '+ self.TB)
 
-        datelist = pd.date_range(start=start_date, end=end_date)
+        datelist = pd.date_range(start=start_date, end=end_date, freq='B') # Busienss days
         dates = datelist.strftime("%Y%m%d").tolist()
         df = self.get_excel_down(start_date)
         conn = tools.check_table_and_connect(df, self.DB, self.TB, self.INIT)

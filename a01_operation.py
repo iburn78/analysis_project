@@ -27,13 +27,13 @@ conn.close()
 #%%
 
 tp = am.set_index('30017_stockcode')[['30017_stockname', '30017_pbuy_net', '81004_mktcap', '81004_increase_rate', '30017_date']]
-tp.columns = ['name', 'pbn', 'mktcap', 'upr', 'date']
+tp.columns = ['name', 'pbn', 'mktcap', 'upr', 'date'] # in this kind of hard-assignment, be careful of column sequence
 tp.index.name = 'code'
 tp['pbn_in_milwon_mktcap'] = tp['pbn']/tp['mktcap']*10**6
 
 tp.plot(kind='scatter', x = 'pbn_in_milwon_mktcap', y='upr', color='red')
+plt.savefig('fig.png') 
 plt.show()
-# plt.savefig('fig.png')
 
 import datetime
 tp_day1 = tp['date'] == datetime.date(2019, 1, 2)
