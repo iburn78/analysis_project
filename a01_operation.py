@@ -1,6 +1,7 @@
 #%%
 from ap.classes import Download_per_date
 from ap.tools import *
+from matplotlib import cm # colormap
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -31,6 +32,8 @@ edate = '20200110'
 label_sdate = '20200113'
 label_edate = '20200117'
 
+#### a3 data preparation ####
+
 a3s = a3.set_index('30017_stockcode')[['30017_stockname', '30017_pbuy_net', '30017_date']]
 a3s.index.name = 'code'
 a3s.columns = ['name', 'pbn', 'date']
@@ -44,12 +47,11 @@ a3s = a3s[mask]
 a3s = a3s.groupby(['code', 'name']).sum()
 a3s.reset_index(inplace=True)
 
-# Select top 100 in size of pbn 
-a3s = a3s.sort_values(by=['pbn'], ascending=False)[:100]
+
+#### a8 data preparation ####
 
 a8.rename(columns={"81004_stockcode": "code", "81004_date": "date"}, inplace=True)
 
-#%%
 a8s = a8[a8['date']==pd.Timestamp(f'{sdate}').date()][['code', '81004_mktcap', '81004_startprice']]
 a8s.rename(columns={"81004_mktcap": "mktcap_sdate", "81004_startprice": "startprice_sdate"}, inplace = True)
 
@@ -65,48 +67,38 @@ a8_temp = a8[a8['date']==pd.Timestamp(f'{label_edate}').date()][['code', '81004_
 a8_temp.rename(columns={"81004_currentprice": "price_ledate"}, inplace = True)
 a8s = pd.merge(a8s, a8_temp, how='left', on=['code'] )
 
-am = pd.merge(a3s, a8s, how='left', on=['code'])
 
+#### a3 and a8 merge ####
+# 1. cut 1000 by market size top 
+a8s = a8s.sort_values(by=['mktcap_sdate'], ascending=False)[:1000]
+# 2. merge and cut 200 by pbn/mktcap
+am = pd.merge(a8s, a3s, how='right', on=['code'])
+am['pbn_mc'] = am['pbn'] / am['mktcap_sdate']
+am = am.sort_values(by=['pbn_mc'], ascending=False)[:200]
+# 3. calculate results for the current period and label period
 am['cur_res'] = (am['price_edate'] - am['startprice_sdate'])/am['startprice_sdate']
 am['label_res'] = (am['price_ledate'] - am['startprice_lsdate'])/am['startprice_lsdate']
-
-
-am.plot(kind='scatter', x = 'cur_res', y='label_res', color='red')
-# plt.savefig('fig.png') 
-plt.show()
-
+am.reset_index(inplace=True)
 
 #%%
-import matplotlib.pyplot as plt
+# print(plt.style.available) - Lookup for matplotlib styles for more options
+plt.style.use('seaborn')
+fig, ax = plt.subplots()
+ax.grid(True)
 
-fig, axes = plt.subplots(nrows = 2, ncols = 1, sharex=True)
-plt.subplot(0,0)
-am['cur_res'].plot()
-plt.subplot(1,0)
-am['label_res'].plot()
+ax.axvline(0, ls='--', color='r')
+ax.axhline(0, ls='--', color='r')
 
+size = am['mktcap_sdate']/am['mktcap_sdate'].mean()*25
+
+colormap_engine = cm.get_cmap('hot', len(am['pbn_mc'])) # Lookup for matplotlib colormaps for more options
+clr = colormap_engine((am['pbn_mc']-am['pbn_mc'].min())/(am['pbn_mc'].max()-am['pbn_mc'].min()))
+
+ax.scatter(am['cur_res'], am['label_res'], c=clr, s=size) 
+
+plt.xlabel(f"current period performance (\'{sdate[2:]}-\'{edate[2:]})")
+plt.ylabel(f"target priod performance (\'{label_sdate[2:]}-\'{label_edate[2:]})")
+plt.savefig('fig.png')
 
 #%%
-import matplotlib.pyplot as plt
-# dataframe sample data
-df1 = pd.DataFrame(np.random.rand(10,2)*100, columns=['A', 'B'])
-df2 = pd.DataFrame(np.random.rand(10,2)*100, columns=['A', 'B'])
-df3 = pd.DataFrame(np.random.rand(10,2)*100, columns=['A', 'B'])
-df4 = pd.DataFrame(np.random.rand(10,2)*100, columns=['A', 'B'])
-df5 = pd.DataFrame(np.random.rand(10,2)*100, columns=['A', 'B'])
-df6 = pd.DataFrame(np.random.rand(10,2)*100, columns=['A', 'B'])
-#define number of rows and columns for subplots
-nrow=3
-ncol=2
-# make a list of all dataframes 
-df_list = [df1 ,df2, df3, df4, df5, df6]
-fig, axes = plt.subplots(nrow, ncol)
-# plot counter
-count=0
-for r in range(nrow):
-    for c in range(ncol-1):
-        df_list[count].plot(ax=axes[r,c])
-        count=+1
-
-
 
