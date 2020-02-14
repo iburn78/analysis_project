@@ -115,66 +115,49 @@ results = pd.DataFrame([count, prob_count, avg_mktcap, pbn_mc, abs_cur_res, abs_
 
 # print(plt.style.available) - Lookup for matplotlib styles for more options
 plt.style.use('seaborn')
-plt.figure(figsize = (7, 5), dpi= 100) # fig size (width, height) is in inches, default: [6.4, 4.8] / dpi default is 100
-plt.subplot()
-plt.grid(True)
-plt.axvline(0, ls='--', color='r')
-plt.axhline(0, ls='--', color='r')
+
+# definitions for the axes
+rect_up = np.asarray([0, 0.3, 1, 1])*1
+rect_down = np.asarray([0, 0, 1, 0.2])*1
+
+fig = plt.figure(figsize = (9,6), dpi =120)  # fig size (width, height) is in inches, default: [6.4, 4.8] / dpi default is 100
+
+ax_up = plt.axes(rect_up)
+ax_down = plt.axes(rect_down)
+
+ax_up.grid(True)
+ax_up.axvline(0, ls='--', color='r')
+ax_up.axhline(0, ls='--', color='r')
 
 size = am['mktcap_sdate']/10**10 # circle size in number of pixcels in 10*10 KRW
 clr = am['pbn_mc']*100 # colormap in percentage
 
-plt.scatter(am['cur_res'], am['target_res'], c=clr, s=size, cmap='coolwarm', linewidth=0, alpha=1) #use coolwarm_r for reverse colormap
-plt.colorbar(label='Net Purchase Percent(%) on MktCap')
+im = ax_up.scatter(am['cur_res'], am['target_res'], c=clr, s=size, cmap='coolwarm', linewidth=0, alpha=1) #use coolwarm_r for reverse colormap
+fig.colorbar(im, ax=ax_up, label='Net Purchase Percent(%) on MktCap')
 
-ax = plt.gca()
-plt.text(ax.get_xlim()[1],ax.get_ylim()[1],'Q1',color='grey', size='10')
-plt.text(ax.get_xlim()[0],ax.get_ylim()[1],'Q2',color='grey', size='10')
-plt.text(ax.get_xlim()[0],ax.get_ylim()[0],'Q3',color='grey', size='10')
-plt.text(ax.get_xlim()[1],ax.get_ylim()[0],'Q4',color='grey', size='10')
+ax_up.text(ax_up.get_xlim()[1],ax_up.get_ylim()[1],'Q1',color='grey', size='10')
+ax_up.text(ax_up.get_xlim()[0],ax_up.get_ylim()[1],'Q2',color='grey', size='10')
+ax_up.text(ax_up.get_xlim()[0],ax_up.get_ylim()[0],'Q3',color='grey', size='10')
+ax_up.text(ax_up.get_xlim()[1],ax_up.get_ylim()[0],'Q4',color='grey', size='10')
 
-plt.title("Institutions' top pick performance analysis")
-plt.xlabel(f"current period performance (\'{sdate[2:]}-\'{edate[2:]})")
-plt.ylabel(f"target priod performance (\'{target_sdate[2:]}-\'{target_edate[2:]})")
+ax_up.set_title("Institutions' top pick performance analysis")
+ax_up.set_xlabel(f"current period performance (\'{sdate[2:]}-\'{edate[2:]})")
+ax_up.set_ylabel(f"target priod performance (\'{target_sdate[2:]}-\'{target_edate[2:]})")
 
 legend_size1 = (size.max()-size.min())*.66+size.min()
 legend_size2 = (size.max()-size.min())*.33+size.min()
 
 for l in [legend_size1, legend_size2]:
-    plt.scatter([], [], c='k', alpha=0.3, s=l, label=str(int(l/10)/10) + ' bKRW')
-plt.legend(scatterpoints=1, frameon=False, labelspacing=1, title='Mkt Cap')
+    ax_up.scatter([], [], c='k', alpha=0.3, s=l, label=str(int(l/10)/10) + ' bKRW')
+ax_up.legend(scatterpoints=1, frameon=False, labelspacing=1, title='Mkt Cap')
 
-plt.subplot()
+ax_down.grid(False)
+ax_down.axis('off')
+ax_down.table(cellText=results.to_numpy(), colLabels=results.columns, loc='center')
 
-plt.table(cellText=results.to_numpy(), colLabels=results.columns, loc='bottom')
-
-
-plt.savefig('fig.png')
-
+plt.savefig('fig.png', bbox_inches='tight')
 
 
-#%%
 
-import matplotlib.pyplot as plt
-import numpy as np
-x = np.arange(0, 10, 0.2)
-y = np.sin(x)
 
-# definitions for the axes
-left, width = 0.07, 0.65
-bottom, height = 0.1, .8
-bottom_h = left_h = left+width+0.02
-
-rect_cones = [left, bottom, width, height]
-rect_box = [left_h, bottom, 0.17, height]
-
-fig = plt.figure()
-
-cones = plt.axes(rect_cones)
-box = plt.axes(rect_box)
-
-cones.plot(x, y)
-
-box.plot(y, x)
-
-plt.show()
+#%% 
