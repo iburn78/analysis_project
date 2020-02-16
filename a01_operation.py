@@ -26,13 +26,12 @@ a8 = pd.read_sql("select * from a01_81004;", conn)
 cursor.close()
 conn.close()
 
-#%%
 sdate = '20200102'
 edate = '20200110'
 target_sdate = '20200113'
 target_edate = '20200117'
-MKTCAP_COUNT_LIMIT = 1000
-COMPANY_COUNT_LIMIT = 500
+MKTCAP_COUNT_LIMIT = 500 # Total number of listed in KOSPI ~700, Kosdaq ~1500
+COMPANY_COUNT_LIMIT = 200
 
 #### a3 data preparation ####
 a3s = a3.set_index('30017_stockcode')[['30017_stockname', '30017_pbuy_net', '30017_date']]
@@ -108,7 +107,7 @@ abs_target_res = np.array([ar(am_ct, 0), ar(am_t, 0), ar(am_c, 0), ar(am_none, 0
 
 total_count = sum(count)
 results = pd.DataFrame([count, prob_count, avg_mktcap, pbn_mc, abs_cur_res, abs_target_res], columns=['Q1', 'Q2', 'Q3', 'Q4'], 
-    index = [f'Count({total_count})', 'Prob', 'MktCap(tW)', 'NetBuy(%)', 'CurErn(tW)', 'TarErn(tW)'])
+    index = [f'Count({total_count})', 'Prob', 'MktCap(tW)', 'NetBuy(%)', 'CurEarn(tW)', 'TarEarn(tW)'])
 
 
 #%%
