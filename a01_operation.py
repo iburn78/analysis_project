@@ -104,8 +104,9 @@ def ar(am, cur=True):
 abs_cur_res = np.array([ar(am_ct, 1), ar(am_t, 1), ar(am_c, 1), ar(am_none, 1)]) # tKRW 
 abs_target_res = np.array([ar(am_ct, 0), ar(am_t, 0), ar(am_c, 0), ar(am_none, 0)]) # tKRW
 
+total_count = sum(count)
 results = pd.DataFrame([count, prob_count, avg_mktcap, pbn_mc, abs_cur_res, abs_target_res], columns=['Q1', 'Q2', 'Q3', 'Q4'], 
-    index = ['Company Count', 'Probability', 'Avg MktCap(tKRW)', 'Net Buy(%)', 'Abs Cur Inc(tKRW)', 'Abs Target Inc(tKRW)'])
+    index = [f'Count({total_count})', 'Prob', 'MktCap(tW)', 'NetBuy(%)', 'CurErn(tW)', 'TarErn(tW)'])
 
 
 #%%
@@ -117,12 +118,14 @@ results = pd.DataFrame([count, prob_count, avg_mktcap, pbn_mc, abs_cur_res, abs_
 plt.style.use('seaborn')
 
 # definitions for the axes
-rect_up = np.asarray([0, 0.3, 1, 1])*1
-rect_down = np.asarray([0, 0, 1, 0.2])*1
+rect_up = np.asarray([0, 0.35, 1, 1])*1
+rect_mid = np.asarray([0, 0.15, 1, 0.1])*1
+rect_down = np.asarray([0, 0, 1, 0.1])*1
 
-fig = plt.figure(figsize = (9,6), dpi =120)  # fig size (width, height) is in inches, default: [6.4, 4.8] / dpi default is 100
+fig = plt.figure(figsize = (9,7), dpi =120)  # fig size (width, height) is in inches, default: [6.4, 4.8] / dpi default is 100
 
 ax_up = plt.axes(rect_up)
+ax_mid = plt.axes(rect_mid)
 ax_down = plt.axes(rect_down)
 
 ax_up.grid(True)
@@ -132,7 +135,7 @@ ax_up.axhline(0, ls='--', color='r')
 size = am['mktcap_sdate']/10**10 # circle size in number of pixcels in 10*10 KRW
 clr = am['pbn_mc']*100 # colormap in percentage
 
-im = ax_up.scatter(am['cur_res'], am['target_res'], c=clr, s=size, cmap='coolwarm', linewidth=0, alpha=1) #use coolwarm_r for reverse colormap
+im = ax_up.scatter(am['cur_res'], am['target_res'], c=clr, s=size, cmap='coolwarm', linewidth=0, alpha=1, label=None) #use coolwarm_r for reverse colormap
 fig.colorbar(im, ax=ax_up, label='Net Purchase Percent(%) on MktCap')
 
 ax_up.text(ax_up.get_xlim()[1],ax_up.get_ylim()[1],'Q1',color='grey', size='10')
@@ -140,9 +143,18 @@ ax_up.text(ax_up.get_xlim()[0],ax_up.get_ylim()[1],'Q2',color='grey', size='10')
 ax_up.text(ax_up.get_xlim()[0],ax_up.get_ylim()[0],'Q3',color='grey', size='10')
 ax_up.text(ax_up.get_xlim()[1],ax_up.get_ylim()[0],'Q4',color='grey', size='10')
 
-ax_up.set_title("Institutions' top pick performance analysis")
-ax_up.set_xlabel(f"current period performance (\'{sdate[2:]}-\'{edate[2:]})")
-ax_up.set_ylabel(f"target priod performance (\'{target_sdate[2:]}-\'{target_edate[2:]})")
+ax_up.set_title(f"Institutions' top pick performance analysis for {total_count} companies")
+ax_up.set_xlabel(f"current period performance ({sdate}-{edate})")
+ax_up.set_ylabel(f"target priod performance ({target_sdate}-{target_edate})")
+
+ax_mid.grid(False)
+# ax_mid.get_yaxis().set_visible(False)
+ax_mid.patch.set_visible(False) 
+rects = ax_mid.bar(results.columns, results.loc['Prob'])
+ax_mid.set_ylabel("Probability")
+for rect in rects:
+    height = rect.get_height()
+    ax_mid.text(rect.get_x() + rect.get_width()/2., 1.05*height, '{:.2f}'.format(height), ha='center', va='bottom')
 
 legend_size1 = (size.max()-size.min())*.66+size.min()
 legend_size2 = (size.max()-size.min())*.33+size.min()
@@ -153,11 +165,15 @@ ax_up.legend(scatterpoints=1, frameon=False, labelspacing=1, title='Mkt Cap')
 
 ax_down.grid(False)
 ax_down.axis('off')
-ax_down.table(cellText=results.to_numpy(), colLabels=results.columns, loc='center')
+
+res = results.drop("Prob")
+data = np.round(res.values, 2)
+table = ax_down.table(cellText=data, rowLabels=res.index, loc='center')
+table.auto_set_font_size(False)
+table.set_fontsize(10)
 
 plt.savefig('fig.png', bbox_inches='tight')
 
 
 
-
-#%% 
+# %%
