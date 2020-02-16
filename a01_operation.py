@@ -31,6 +31,8 @@ sdate = '20200102'
 edate = '20200110'
 target_sdate = '20200113'
 target_edate = '20200117'
+MKTCAP_COUNT_LIMIT = 1000
+COMPANY_COUNT_LIMIT = 500
 
 #### a3 data preparation ####
 a3s = a3.set_index('30017_stockcode')[['30017_stockname', '30017_pbuy_net', '30017_date']]
@@ -68,11 +70,11 @@ a8s = pd.merge(a8s, a8_temp, how='left', on=['code'] )
 
 #### a3 and a8 merge ####
 # 1. cut 1000 by market size top 
-a8s = a8s.sort_values(by=['mktcap_sdate'], ascending=False)[:1000]
+a8s = a8s.sort_values(by=['mktcap_sdate'], ascending=False)[:MKTCAP_COUNT_LIMIT]
 # 2. merge and cut 200 by pbn/mktcap
 am = pd.merge(a8s, a3s, how='right', on=['code'])
 am['pbn_mc'] = am['pbn'] / am['mktcap_sdate']
-am = am.sort_values(by=['pbn_mc'], ascending=False)[:200]
+am = am.sort_values(by=['pbn_mc'], ascending=False)[:COMPANY_COUNT_LIMIT]
 # 3. calculate results for the current period and label period
 am['cur_res'] = (am['price_edate'] - am['startprice_sdate'])/am['startprice_sdate']
 am['target_res'] = (am['price_tedate'] - am['startprice_tsdate'])/am['startprice_tsdate']
@@ -97,9 +99,9 @@ pbn_mc = avg_pbn/avg_mktcap*100 # Percent
 
 def ar(am, cur=True):
     if cur==True: 
-        return sum(am.mktcap_sdate*am.cur_res)/10**12
+        return sum(am.mktcap_sdate*am.cur_res/10**12)
     else: 
-        return sum(am.mktcap_sdate*am.target_res)/10**12
+        return sum(am.mktcap_sdate*am.target_res/10**12)
 
 abs_cur_res = np.array([ar(am_ct, 1), ar(am_t, 1), ar(am_c, 1), ar(am_none, 1)]) # tKRW 
 abs_target_res = np.array([ar(am_ct, 0), ar(am_t, 0), ar(am_c, 0), ar(am_none, 0)]) # tKRW
@@ -150,6 +152,7 @@ ax_up.set_ylabel(f"target priod performance ({target_sdate}-{target_edate})")
 ax_mid.grid(False)
 # ax_mid.get_yaxis().set_visible(False)
 ax_mid.patch.set_visible(False) 
+
 rects = ax_mid.bar(results.columns, results.loc['Prob'])
 ax_mid.set_ylabel("Probability")
 for rect in rects:
@@ -176,4 +179,3 @@ plt.savefig('fig.png', bbox_inches='tight')
 
 
 
-# %%
