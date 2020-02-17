@@ -5,8 +5,8 @@ from ap.tools import *
 DB = 'Analysis'
 INIT = 'init'  
 
-START_DATE = '20200101'
-END_DATE = '20200630'
+START_DATE = '20190701'
+END_DATE = '20191231'
 
 TB1 = 'a02_30017'
 PREFIX1 = '30017'
