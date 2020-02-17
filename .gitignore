@@ -130,6 +130,7 @@ dmypy.json
 
 # VSCODE 
 .vscode
+.vscode/
 
 # matplotlib output figures
 *.png
