@@ -146,6 +146,14 @@ def read_DB_A01(db):
     conn.close()
     return [a3, a8]
 
+def read_DB_A02(db):
+    conn = get_connection(db)
+
+    a3 = pd.read_sql("select * from a02_30017;", conn)
+    a8 = pd.read_sql("select * from a02_81004;", conn)
+
+    conn.close()
+    return [a3, a8]
 
 def analysis_A01(a3, a8, dates, MKTCAP_COUNT_LIMIT, COMPANY_COUNT_LIMIT):
 
@@ -294,3 +302,12 @@ def plot_A01(am, results, dates, SAVE_TO_FILE):
     table.set_fontsize(10)
 
     plt.savefig(SAVE_TO_FILE, bbox_inches='tight')
+
+
+def holiday_skipper(dates, holidays=HOLIDAYS): 
+    res = []
+    for i, val in enumerate(dates):
+        while val in holidays:
+            val += pd.offsets.BDay()
+        res.append(val.strftime('%Y%m%d'))
+    return res
