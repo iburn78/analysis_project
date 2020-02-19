@@ -9,8 +9,8 @@ DB = 'Analysis'
 if 'a3' not in dir():
     [a3, a8] = read_DB_A02(DB)
 
-MKTCAP_COUNT_LIMIT = 1000 
-COMPANY_COUNT_LIMIT = 50
+MKTCAP_COUNT_LIMIT = 500 
+COMPANY_COUNT_LIMIT = 10
 
 sdate = pd.date_range('20190101', '20191231', freq = 'W-Mon')
 edate = sdate + 4*pd.offsets.BDay()
