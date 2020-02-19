@@ -10,31 +10,42 @@ if 'a3' not in dir():
     [a3, a8] = read_DB_A02(DB)
 
 MKTCAP_COUNT_LIMIT = 500 
-COMPANY_COUNT_LIMIT = 10
+COMPANY_COUNT_LIMIT = 100 
 
-sdate = pd.date_range('20190101', '20191231', freq = 'W-Mon')
-edate = sdate + 4*pd.offsets.BDay()
-
+sdate = pd.date_range('20190101', '20191231', freq = 'B')
 sdate = holiday_skipper(sdate)
-edate = holiday_skipper(edate)
 
 dates = pd.DataFrame(columns = ['sdate', 'edate', 'target_sdate', 'target_edate'])
-dates.sdate = sdate[:-2]
-dates.edate = edate[:-2]
-dates.target_sdate = sdate[1:-1]
-dates.target_edate = edate[1:-1]
+dates.sdate = sdate[:-1]
+dates.edate = sdate[:-1]
+dates.target_sdate = sdate[1:]
+dates.target_edate = sdate[1:]
 
 dates2H = dates[dates.sdate >= '20190701']
+
+##### Weekly Analysis  #####
+# sdate = pd.date_range('20190101', '20191231', freq = 'W-Mon')
+# edate = sdate + 4*pd.offsets.BDay()
+
+# sdate = holiday_skipper(sdate)
+# edate = holiday_skipper(edate)
+
+# dates = pd.DataFrame(columns = ['sdate', 'edate', 'target_sdate', 'target_edate'])
+# dates.sdate = sdate[:-2]
+# dates.edate = edate[:-2]
+# dates.target_sdate = sdate[1:-1]
+# dates.target_edate = edate[1:-1]
+
+# dates2H = dates[dates.sdate >= '20190701']
+
 
 res2H = []
 for i in range(len(dates2H)):
     [am, results, lin_str, weighted_str] = analysis_A01(a3, a8, list(dates2H.iloc[i]), MKTCAP_COUNT_LIMIT, COMPANY_COUNT_LIMIT)
     res2H.append(results)
-    SAVE_TO_FILE = f'figs/fig{dates2H.iloc[i][0]}.png'
-    plot_A01(am, results, list(dates2H.iloc[i]), SAVE_TO_FILE)
+    # SAVE_TO_FILE = f'figs/fig{dates2H.iloc[i][0]}.png'
+    # plot_A01(am, results, list(dates2H.iloc[i]), SAVE_TO_FILE)
 
-
-#%% 
 lin_str = []
 weighted_str = []
 for i in range(len(res2H)):
