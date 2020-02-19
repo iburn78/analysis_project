@@ -10,16 +10,16 @@ if 'a3' not in dir():
     [a3, a8] = read_DB_A02(DB)
 
 MKTCAP_COUNT_LIMIT = 500 
-COMPANY_COUNT_LIMIT = 100 
+COMPANY_COUNT_LIMIT = 10 
 
 sdate = pd.date_range('20190101', '20191231', freq = 'B')
 sdate = holiday_skipper(sdate)
 
 dates = pd.DataFrame(columns = ['sdate', 'edate', 'target_sdate', 'target_edate'])
-dates.sdate = sdate[:-1]
-dates.edate = sdate[:-1]
-dates.target_sdate = sdate[1:]
-dates.target_edate = sdate[1:]
+dates.sdate = sdate[:-2]
+dates.edate = sdate[:-2]
+dates.target_sdate = sdate[1:-1]
+dates.target_edate = sdate[1:-1]
 
 dates2H = dates[dates.sdate >= '20190701']
 
