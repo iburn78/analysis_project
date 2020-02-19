@@ -243,7 +243,7 @@ def plot_A01(am, results, dates, SAVE_TO_FILE):
     # print(plt.style.available) - Lookup for matplotlib styles for more options
     plt.style.use('seaborn')
     [sdate, edate, target_sdate, target_edate] = dates
-    total_count = results.iloc[1].sum()
+    total_count = results.iloc[0].sum()
 
     # definitions for the axes
     rect_up = np.asarray([0, 0.35, 1, 1])*1
