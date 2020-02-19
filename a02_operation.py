@@ -45,7 +45,7 @@ for i in range(len(dates2H)):
     res2H.append(results)
     # SAVE_TO_FILE = f'figs/fig{dates2H.iloc[i][0]}.png'
     # plot_A01(am, results, list(dates2H.iloc[i]), SAVE_TO_FILE)
-
+#%%
 lin_str = []
 weighted_str = []
 for i in range(len(res2H)):
@@ -67,6 +67,7 @@ plt.legend(scatterpoints=1, frameon=False, labelspacing=1, loc='upper left')
 plt.xlabel("measure period start day")
 plt.ylabel("return %")
 plt.title(f"2019 2H institutions' weekly {COMPANY_COUNT_LIMIT} top pick - subsequent week performance")
-xticks = plt.xticks(rotation=45)
+# xticks = plt.xticks(rotation=45)
+xticks = plt.xticks([])
 
 plt.savefig('figs/20192H_summary.png')
