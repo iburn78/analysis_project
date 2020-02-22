@@ -6,6 +6,7 @@ import pandas as pd
 from io import BytesIO
 from . import tools
 import time
+import numpy as np
 
 class Download_per_date:
     
@@ -60,7 +61,7 @@ class Download_per_date:
 
     def get_excel_down(self, pdate):
         r = requests.get(self.gen_req_url_get, self.query_str_params(pdate), headers=self.headers_get)
-        time.sleep(2.0)
+        time.sleep(5+np.random.random()*115)
 
         if len(r.content) == 0: 
             print('GET failed for date', pdate)
