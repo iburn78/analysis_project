@@ -53,5 +53,5 @@ c = datetime.datetime.now()
 print("A03 (20180101 to 20200221) Downloading completed at ", c)
 print("A03_30017 took ", b-a)
 print("A03_81004 took ", c-b)
-print("A03 total took ", c-b)
+print("A03 total took ", c-a)
 
